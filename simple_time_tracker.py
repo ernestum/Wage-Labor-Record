@@ -94,7 +94,7 @@ class WorkedTimeStore:
         :return: A generator yielding the most recent n task-client-tuples.
         """
         work_items = set()
-        for worked_time in self.worked_times():
+        for worked_time in reversed(self.worked_times()):
             work_item = (worked_time.task, worked_time.client)
             if work_item not in work_items:
                 work_items.add(work_item)
