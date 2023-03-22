@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wage_labor_record"
+authors = [ {name = "Maximilian Ernestus", email = "maximilian@ernestus.de" }]
+description = "A tool to track you wage labor."
+readme = "README.md"
+keywords = ["timetracking"]
+requires-python = ">=3.8"
+license = {text = "GNU General Public License v3 (GPLv3)", file = "LICENSE"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Office/Business :: Financial :: Accounting",
+    "Topic :: Utilities",
+]
+dynamic = ["version"]
+dependencies = [
+    "pycairo",
+    "PyGObject",
+]
+
+[project.gui-scripts]
+wlr = "wage_labor_record:run_gui"
+
+[tool.setuptools_scm]
