@@ -2,8 +2,10 @@ import os
 import sys
 import warnings
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Optional, Tuple
 
+import gi
+gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gio, Gtk
 
 
@@ -58,18 +60,26 @@ def link_gtk_menu_item_to_gio_action(menu_item: Gtk.MenuItem, action: Gio.Simple
     action.connect("notify::enabled", lambda _0, _1: menu_item.set_sensitive(action.get_enabled()))
 
 
-def make_completer(items: Iterable[str]):
-    model = Gtk.ListStore(str)
-    for item in items:
-        model.append([item])
-    completer = Gtk.EntryCompletion(
+def make_completer(model):
+    return Gtk.EntryCompletion(
         model=model,
         inline_completion=True,
         inline_selection=True,
         popup_completion=True,
         minimum_key_length=0,
     )
-    # we cant set it in the constructor, otherwise the
-    # completions are not properly rendered
-    completer.set_text_column(0)
-    return completer
+
+
+def filter_duplicate_items(model, iter, data: Tuple[int, set]) -> bool:
+    """
+    Used as a filter function for Gtk.TreeModelFilter.
+
+    Use with
+    >>> filter.set_visible_func(filter_duplicate_items, (column, set())
+    """
+    column, seen_items = data
+    value = model[iter][column]
+    if value in seen_items:
+        return False
+    seen_items.add(value)
+    return True

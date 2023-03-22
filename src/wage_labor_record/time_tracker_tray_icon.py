@@ -126,4 +126,5 @@ class TimeTrackerTrayIcon(XApp.StatusIcon):
 
         _update_menu()
 
-        stop_tracking_action.connect("worked-time", _update_menu)
+        worked_time_store.connect("row-inserted", _update_menu)
+        worked_time_store.connect("row-deleted", _update_menu)
