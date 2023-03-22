@@ -4,7 +4,7 @@ import time
 
 import gi
 
-from wage_labor_record.tracked_time_store import WorkedTime
+from wage_labor_record.worked_time_store import WorkedTime
 
 gi.require_version("Gtk", "3.0")
 gi.require_version('XApp', '1.0')

@@ -7,7 +7,7 @@ import time
 import gi
 
 from wage_labor_record.actions import AbortTrackingAction, SetCurrentTaskAction, StartTrackingAction, StopTrackingAction
-from wage_labor_record.tracked_time_store import WorkedTimeStore
+from wage_labor_record.worked_time_store import WorkedTimeStore
 from wage_labor_record.tracking_state import TrackingState
 from wage_labor_record.utils import get_idle_time, link_gtk_menu_item_to_gio_action, make_completer, user_data_dir
 
