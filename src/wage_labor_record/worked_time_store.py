@@ -71,6 +71,31 @@ class WorkedTimeStore(Gio.ListStore):
 
         self.sort(compare_start_times)
 
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            if item.start is not None and not isinstance(item.start, GLib.DateTime):
+                raise TypeError("start must be a GLib.DateTime")
+            if item.stop is not None and not isinstance(item.stop, GLib.DateTime):
+                raise TypeError("stop must be a GLib.DateTime")
+
+            list_store = Gio.ListStore(item_type=WorkedTime)
+
+            def populate_list_store():
+                list_store.remove_all()
+                for wt in self:
+                    if item.start is not None and wt.start_time.to_unix() < item.start.to_unix():
+                        continue
+                    if item.stop is not None and wt.start_time.to_unix() > item.stop.to_unix():
+                        continue
+                    list_store.append(wt)
+
+            self.connect("items-changed", lambda *_args: populate_list_store())
+
+            populate_list_store()
+            return list_store
+
+        return self.get_item(item)
+
     def save(self, *_args):
         with open(self._filename, "w") as f:
             json.dump([wt.asdict() for wt in self], f, indent=2)
