@@ -6,6 +6,7 @@ import gi
 from wage_labor_record.tracking_state import TrackingState
 from wage_labor_record.utils import link_gtk_menu_item_to_gio_action
 from wage_labor_record.worked_time_store import WorkedTimeStore
+from wage_labor_record.worked_time_widget import WorkedTimeWindow
 
 gi.require_version("Gtk", "3.0")
 gi.require_version('XApp', '1.0')
@@ -111,6 +112,15 @@ class TimeTrackerTrayIcon(XApp.StatusIcon):
             # SEPARATOR ----------------------------
             menu.append(Gtk.SeparatorMenuItem())
 
+            # HISTORY ----------------------------
+            history_item = Gtk.MenuItem(label="History")
+            history_item.connect("activate", lambda _0: WorkedTimeWindow(worked_time_store).show_all())
+            menu.append(history_item)
+
+            # SEPARATOR ----------------------------
+            menu.append(Gtk.SeparatorMenuItem())
+
+
             # ABORT ----------------------------
             abort_item = Gtk.MenuItem(label="Abort")
             link_gtk_menu_item_to_gio_action(abort_item, abort_tracking_action)
@@ -126,5 +136,4 @@ class TimeTrackerTrayIcon(XApp.StatusIcon):
 
         _update_menu()
 
-        worked_time_store.connect("row-inserted", _update_menu)
-        worked_time_store.connect("row-deleted", _update_menu)
+        worked_time_store.connect("items-changed", _update_menu)
