@@ -1,6 +1,4 @@
-import datetime
 import logging
-import time
 
 import gi
 
@@ -22,8 +20,7 @@ class AbortTrackingAction(Gio.SimpleAction):
         self._update_enabled_state()
 
     def _abort_tracking(self, *_args):
-        self._tracking_state.start_time = -1
-
+        self._tracking_state.start_time = None
         logging.debug("Abort tracking")
 
     def _update_enabled_state(self, *_args):
@@ -46,18 +43,18 @@ class StopTrackingAction(Gio.SimpleAction):
 
     def _stop_tracking(self, *_args):
         assert self.get_enabled()
-        assert self._tracking_state.start_time >= 0
+        assert self._tracking_state.start_time is not None
         assert self._tracking_state.task != ""
         assert self._tracking_state.client != ""
 
         self.emit("worked-time", WorkedTime(
-            datetime.datetime.fromtimestamp(self._tracking_state.start_time),
-            datetime.datetime.now(),
             self._tracking_state.task,
-            self._tracking_state.client
+            self._tracking_state.client,
+            self._tracking_state.start_time,
+            GLib.DateTime.new_now_local(),
         ))
 
-        self._tracking_state.start_time = -1
+        self._tracking_state.start_time = None
 
         logging.debug("Stop tracking")
 
@@ -86,7 +83,7 @@ class SetCurrentTaskAction(Gio.SimpleAction):
         self._tracking_state.task = task
         self._tracking_state.client = client
         if not self._tracking_state.is_tracking():
-            self._tracking_state.start_time = time.time()
+            self._tracking_state.start_time = GLib.DateTime.new_now_local()
         logging.debug(f"Start tracking task {self._tracking_state.task}")
 
     def _update_enabled_state(self, *_args):
@@ -107,7 +104,7 @@ class StartTrackingAction(Gio.SimpleAction):
         self._update_enabled_state()
 
     def _start_tracking(self, *_args):
-        self._tracking_state.start_time = time.time()
+        self._tracking_state.start_time = GLib.DateTime.new_now_local()
         logging.debug("Start tracking")
 
     def _update_enabled_state(self, *_args):

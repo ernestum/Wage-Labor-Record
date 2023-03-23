@@ -79,7 +79,10 @@ class TimeTrackerWindow(Gtk.Dialog):
         # When the tracking is active, repeatedly update the elapsed time label
         def _update_elapsed_time_label():
             if tracking_state.is_tracking():
-                label_txt = str(datetime.timedelta(seconds=int(time.time() - tracking_state.start_time)))
+                label_txt = str(datetime.timedelta(
+                    seconds=
+                        round(GLib.DateTime.new_now_local().difference(tracking_state.start_time)/1000000)
+                ))
                 self.elapsed_time_label.set_markup(f"<span font='monospace bold 24'>{label_txt}</span>")
             return tracking_state.is_tracking()
 
