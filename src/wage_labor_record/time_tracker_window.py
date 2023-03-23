@@ -1,6 +1,4 @@
 import datetime
-import time
-
 import gi
 
 from wage_labor_record.tracking_state import TrackingState
@@ -19,9 +17,6 @@ class TimeTrackerWindow(Gtk.Dialog):
         box = self.get_content_area()
 
         task_completer = make_completer(worked_time_store.all_tasks())
-        # we cant set it in the constructor, otherwise the
-        # completions are not properly rendered
-        task_completer.set_text_column(WorkedTimeStore.COLUMN_TASK)
 
         self.task_entry = Gtk.Entry(
             placeholder_text="Task",
@@ -32,9 +27,6 @@ class TimeTrackerWindow(Gtk.Dialog):
         box.add(self.task_entry)
 
         client_completer = make_completer(worked_time_store.all_clients())
-        # we cant set it in the constructor, otherwise the
-        # completions are not properly rendered
-        client_completer.set_text_column(WorkedTimeStore.COLUMN_CLIENT)
         self.client_entry = Gtk.Entry(
             placeholder_text="Client",
             completion=client_completer,

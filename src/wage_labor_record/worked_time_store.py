@@ -2,94 +2,88 @@ from datetime import datetime, timedelta
 import dataclasses
 import json
 import os
-from typing import Generator, Iterable, Tuple
+from typing import Generator, Tuple
 
 import gi
-
-from wage_labor_record.utils import filter_duplicate_items
-
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GLib
+from gi.repository import Gio, GLib, GObject
 
 
-@dataclasses.dataclass
-class WorkedTime:
-    start_time: datetime
-    end_time: datetime
-    task: str
-    client: str
+class WorkedTime(GObject.GObject):
+    task = GObject.Property(type=str, default="")
+    client = GObject.Property(type=str, default="")
+    start_time = GObject.Property(type=GLib.DateTime, default=None)
+    end_time = GObject.Property(type=GLib.DateTime, default=None)
+
+    def __init__(self,  task: str, client: str, start_time: GLib.DateTime, end_time: GLib.DateTime):
+        GObject.GObject.__init__(self)
+        self.task = task
+        self.client = client
+        self.start_time = start_time
+        self.end_time = end_time
 
     def duration(self) -> timedelta:
         return self.end_time - self.start_time
 
     def asdict(self) -> dict:
-        d = dataclasses.asdict(self)
-        d["start_time"] = self.start_time.isoformat()
-        d["end_time"] = self.end_time.isoformat()
-        return d
+        return dict(
+            start_time=self.start_time.format_iso8601(),
+            end_time=self.end_time.format_iso8601(),
+            task=self.task,
+            client=self.client,
+        )
 
-    def __post_init__(self):
-        if isinstance(self.start_time, str):
-            self.start_time = datetime.fromisoformat(self.start_time)
-        if isinstance(self.end_time, str):
-            self.end_time = datetime.fromisoformat(self.end_time)
+    @classmethod
+    def fromdict(cls, d: dict) -> "WorkedTime":
+        tz = GLib.TimeZone.new_local()
+        return cls(
+            start_time=GLib.DateTime.new_from_iso8601(d["start_time"], tz),
+            end_time=GLib.DateTime.new_from_iso8601(d["end_time"], tz),
+            task=d["task"],
+            client=d["client"],
+        )
+
+    def is_done(self) -> bool:
+        return self.end_time is not None
+
+    def is_started(self) -> bool:
+        return self.start_time is not None
 
 
-class WorkedTimeStore(Gtk.ListStore):
-
-    COLUMN_TASK = 0
-    COLUMN_CLIENT = 1
-    COLUMN_START_TIME = 2
-    COLUMN_END_TIME = 3
+class WorkedTimeStore(Gio.ListStore):
 
     def __init__(self, filename: str):
-        super().__init__(str, str, GLib.DateTime, GLib.DateTime)
+        super().__init__(item_type=WorkedTime)
         self._filename = filename
-
-        def sort_func(model, a, b, _):
-            start_a = model[a][WorkedTimeStore.COLUMN_START_TIME].to_unix()
-            start_b = model[b][WorkedTimeStore.COLUMN_START_TIME].to_unix()
-            return start_a - start_b
-
-        self.set_sort_func(WorkedTimeStore.COLUMN_START_TIME, sort_func, None)
-        self.set_sort_column_id(WorkedTimeStore.COLUMN_START_TIME, Gtk.SortType.DESCENDING)
-
         self.load()
 
     def load(self):
         if os.path.exists(self._filename):
             with open(self._filename, "r") as f:
                 for d in json.load(f):
-                    self.add_worked_time(WorkedTime(**d))
+                    self.add_worked_time(WorkedTime.fromdict(d))
+        self._sort_by_start_time()  # just to be sure
 
-    def save(self):
+    def _sort_by_start_time(self):
+        def compare_start_times(a: WorkedTime, b: WorkedTime):
+            # Note: GLib.DateTime.compare() is not available in Python apparently
+            return a.start_time.to_unix() - b.start_time.to_unix()
+
+        self.sort(compare_start_times)
+
+    def save(self, *_args):
         with open(self._filename, "w") as f:
-            json.dump([wt.asdict() for wt in self.worked_times()], f, indent=2)
+            json.dump([wt.asdict() for wt in self], f, indent=2)
 
     def add_worked_time(self, worked_time: WorkedTime):
-        start_time = GLib.DateTime.new_from_unix_local(worked_time.start_time.timestamp())
-        end_time = GLib.DateTime.new_from_unix_local(worked_time.end_time.timestamp())
-        self.append([worked_time.task, worked_time.client, start_time, end_time])
-        self.save()
+        worked_time.connect("notify", self.save)
+        self.append(worked_time)
 
-    def worked_times(self) -> Iterable[WorkedTime]:
-        for row in self:
-            yield WorkedTime(
-                start_time=datetime.fromtimestamp(row[2].to_unix()),
-                end_time=datetime.fromtimestamp(row[3].to_unix()),
-                task=row[0],
-                client=row[1],
-            )
+    def all_clients(self) -> set:
+        return {wt.client for wt in self}
 
-    def all_clients(self) -> Gtk.TreeModelFilter:
-        filter = self.filter_new()
-        filter.set_visible_func(filter_duplicate_items, (WorkedTimeStore.COLUMN_CLIENT, set()))
-        return filter
-
-    def all_tasks(self) -> Gtk.TreeModelFilter:
-        filter = self.filter_new()
-        filter.set_visible_func(filter_duplicate_items, (WorkedTimeStore.COLUMN_TASK, set()))
-        return filter
+    def all_tasks(self) -> set:
+        return {wt.task for wt in self}
 
     def most_recent_worked_tasks_and_clients(self, n: int) -> Generator[Tuple[str, str], None, None]:
         """
@@ -100,8 +94,8 @@ class WorkedTimeStore(Gtk.ListStore):
         :return: A generator yielding the most recent n task-client-tuples.
         """
         work_items = set()
-        for row in self:
-            work_item = (row[WorkedTimeStore.COLUMN_TASK], row[WorkedTimeStore.COLUMN_CLIENT])
+        for worked_time in self:
+            work_item = (worked_time.task, worked_time.client)
             if work_item not in work_items:
                 work_items.add(work_item)
                 yield work_item
