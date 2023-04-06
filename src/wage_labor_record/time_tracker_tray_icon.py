@@ -6,7 +6,7 @@ import gi
 from wage_labor_record.tracking_state import TrackingState
 from wage_labor_record.utils import link_gtk_menu_item_to_gio_action
 from wage_labor_record.worked_time_store import WorkedTimeStore
-from wage_labor_record.worked_time_widget import WorkedTimeWindow
+from wage_labor_record.history_view.history_browser_window import HistoryBrowserWindow
 
 gi.require_version("Gtk", "3.0")
 gi.require_version('XApp', '1.0')
@@ -114,7 +114,7 @@ class TimeTrackerTrayIcon(XApp.StatusIcon):
 
             # HISTORY ----------------------------
             history_item = Gtk.MenuItem(label="History")
-            history_item.connect("activate", lambda _0: WorkedTimeWindow(worked_time_store).show_all())
+            history_item.connect("activate", lambda _0: HistoryBrowserWindow(worked_time_store).show_all())
             menu.append(history_item)
 
             # SEPARATOR ----------------------------

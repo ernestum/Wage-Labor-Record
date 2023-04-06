@@ -60,12 +60,7 @@ def link_gtk_menu_item_to_gio_action(menu_item: Gtk.MenuItem, action: Gio.Simple
     action.connect("notify::enabled", lambda _0, _1: menu_item.set_sensitive(action.get_enabled()))
 
 
-def make_completer(items: Set[str]) -> Gtk.EntryCompletion:
-    model = Gtk.ListStore(str)
-
-    for item in items:
-        model.append([item])
-
+def make_completer(model: Gtk.ListStore) -> Gtk.EntryCompletion:
     completer = Gtk.EntryCompletion(
         model=model,
         inline_completion=True,
@@ -76,8 +71,6 @@ def make_completer(items: Set[str]) -> Gtk.EntryCompletion:
     # TODO: this is a hack, but it works
     completer.set_text_column(0)
     return completer
-
-
 
 def filter_duplicate_items(model, iter, data: Tuple[int, set]) -> bool:
     """

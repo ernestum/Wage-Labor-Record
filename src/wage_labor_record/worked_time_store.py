@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta
-import dataclasses
 import json
 import os
-from typing import Generator, Tuple
+from datetime import timedelta
+from typing import Generator, Optional, Set, Tuple
 
 import gi
+
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gio, GLib, GObject
+from gi.repository import Gtk, Gio, GLib, GObject
 
 
 class WorkedTime(GObject.GObject):
@@ -22,8 +22,16 @@ class WorkedTime(GObject.GObject):
         self.start_time = start_time
         self.end_time = end_time
 
+        # notify of derived duration property change
+        self.connect("notify::start-time", self._notify_duration)
+        self.connect("notify::end-time", self._notify_duration)
+
+    def _notify_duration(self, *args):
+        self.notify("duration")
+
+    @GObject.Property(type=object)
     def duration(self) -> timedelta:
-        return self.end_time - self.start_time
+        return timedelta(microseconds=self.end_time.difference(self.start_time))
 
     def asdict(self) -> dict:
         return dict(
@@ -61,7 +69,7 @@ class WorkedTimeStore(Gio.ListStore):
         if os.path.exists(self._filename):
             with open(self._filename, "r") as f:
                 for d in json.load(f):
-                    self.add_worked_time(WorkedTime.fromdict(d))
+                    self.add_worked_time(WorkedTime.fromdict(d), save=False)
         self._sort_by_start_time()  # just to be sure
 
     def _sort_by_start_time(self):
@@ -71,43 +79,72 @@ class WorkedTimeStore(Gio.ListStore):
 
         self.sort(compare_start_times)
 
-    def __getitem__(self, item):
-        if isinstance(item, slice):
-            if item.start is not None and not isinstance(item.start, GLib.DateTime):
-                raise TypeError("start must be a GLib.DateTime")
-            if item.stop is not None and not isinstance(item.stop, GLib.DateTime):
-                raise TypeError("stop must be a GLib.DateTime")
+    def get_subset(
+            self,
+            tasks: Optional[Set[str]] = None,
+            clients: Optional[Set[str]] = None,
+            start_time: Optional[GLib.DateTime] = None,
+            end_time: Optional[GLib.DateTime] = None) -> Gio.ListStore:
+        list_store = Gio.ListStore(item_type=WorkedTime)
 
-            list_store = Gio.ListStore(item_type=WorkedTime)
+        def populate_list_store():
+            list_store.remove_all()
+            for wt in self:
+                if start_time is not None and wt.start_time.to_unix() < start_time.to_unix():
+                    continue
+                if end_time is not None and wt.start_time.to_unix() > end_time.to_unix():
+                    continue
+                if tasks is not None and wt.task not in tasks:
+                    continue
+                if clients is not None and wt.client not in clients:
+                    continue
+                list_store.append(wt)
 
-            def populate_list_store():
-                list_store.remove_all()
-                for wt in self:
-                    if item.start is not None and wt.start_time.to_unix() < item.start.to_unix():
-                        continue
-                    if item.stop is not None and wt.start_time.to_unix() > item.stop.to_unix():
-                        continue
-                    list_store.append(wt)
+        self.connect("items-changed", lambda *_args: populate_list_store())
 
-            self.connect("items-changed", lambda *_args: populate_list_store())
+        populate_list_store()
+        return list_store
 
-            populate_list_store()
-            return list_store
-
-        return self.get_item(item)
 
     def save(self, *_args):
+        print("Saving to", self._filename)
         with open(self._filename, "w") as f:
             json.dump([wt.asdict() for wt in self], f, indent=2)
 
-    def add_worked_time(self, worked_time: WorkedTime):
+    def add_worked_time(self, worked_time: WorkedTime, save: bool = True):
         worked_time.connect("notify", self.save)
         self.append(worked_time)
+        if save:
+            self.save()
 
-    def all_clients(self) -> set:
+    def all_clients(self) -> Gtk.ListStore:
+        clients = Gtk.ListStore(str)
+
+        def fill_clients(*_args):
+            clients.clear()
+            for client in self._all_clients():
+                clients.append([client])
+
+        fill_clients()
+        self.connect("items-changed", fill_clients)
+        return clients
+
+    def _all_clients(self) -> set:
         return {wt.client for wt in self}
 
-    def all_tasks(self) -> set:
+    def all_tasks(self) -> Gtk.ListStore:
+        tasks = Gtk.ListStore(str)
+
+        def fill_tasks(*_args):
+            tasks.clear()
+            for task in self._all_tasks():
+                tasks.append([task])
+
+        fill_tasks()
+        self.connect("items-changed", fill_tasks)
+        return tasks
+
+    def _all_tasks(self) -> set:
         return {wt.task for wt in self}
 
     def most_recent_worked_tasks_and_clients(self, n: int) -> Generator[Tuple[str, str], None, None]:
