@@ -21,8 +21,6 @@ class SelectorWidget(Gtk.Box):
         self.selected_clients: Optional[Set[str]] = None
         self.selected_tasks: Optional[Set[str]] = None
 
-
-
         # Time Selector
         time_selections_model = Gtk.ListStore(str)
         time_selections_model.append(["Today"])
@@ -79,7 +77,7 @@ class SelectorWidget(Gtk.Box):
 
         task_selector = Gtk.TreeView(rubber_banding=True)
         task_selector.connect("key-press-event", on_esc_deselect_all)
-        task_selector.set_model(worked_time_store.all_tasks())
+        task_selector.set_model(worked_time_store.tasks)
         task_selector.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
         task_selector.append_column(Gtk.TreeViewColumn("Task", Gtk.CellRendererText(), text=0))
 
@@ -98,7 +96,7 @@ class SelectorWidget(Gtk.Box):
 
         client_selector = Gtk.TreeView(rubber_banding=True)
         client_selector.connect("key-press-event", on_esc_deselect_all)
-        client_selector.set_model(worked_time_store.all_clients())
+        client_selector.set_model(worked_time_store.clients)
         client_selector.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
         client_selector.append_column(Gtk.TreeViewColumn("Client", Gtk.CellRendererText(), text=0))
 

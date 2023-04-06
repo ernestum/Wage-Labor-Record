@@ -16,7 +16,7 @@ class TimeTrackerWindow(Gtk.Dialog):
         # Layout
         box = self.get_content_area()
 
-        task_completer = make_completer(worked_time_store.all_tasks())
+        task_completer = make_completer(worked_time_store.tasks)
 
         self.task_entry = Gtk.Entry(
             placeholder_text="Task",
@@ -26,7 +26,7 @@ class TimeTrackerWindow(Gtk.Dialog):
         self.task_entry.show()
         box.add(self.task_entry)
 
-        client_completer = make_completer(worked_time_store.all_clients())
+        client_completer = make_completer(worked_time_store.clients)
         self.client_entry = Gtk.Entry(
             placeholder_text="Client",
             completion=client_completer,

@@ -1,7 +1,8 @@
 import json
+import logging
 import os
 from datetime import timedelta
-from typing import Generator, Optional, Set, Tuple
+from typing import Callable, Generator, Optional, Set, Tuple
 
 import gi
 
@@ -59,18 +60,31 @@ class WorkedTime(GObject.GObject):
 
 
 class WorkedTimeStore(Gio.ListStore):
+    clients_changed = GObject.Signal("clients-changed")
+    tasks_changed = GObject.Signal("tasks-changed")
+    item_added = GObject.Signal("item-added", arg_types=(WorkedTime,))
+    item_removed = GObject.Signal("item-removed", arg_types=(WorkedTime,))
 
     def __init__(self, filename: str):
-        super().__init__(item_type=WorkedTime)
+        GObject.GObject.__init__(self)
+        Gio.ListStore.__init__(self, item_type=WorkedTime)
         self._filename = filename
-        self.load()
+        self._clients = set()
+        self._tasks = set()
+        self.clients = Gtk.ListStore(str)
+        self.tasks = Gtk.ListStore(str)
 
-    def load(self):
+        # Load from file
         if os.path.exists(self._filename):
             with open(self._filename, "r") as f:
                 for d in json.load(f):
-                    self.add_worked_time(WorkedTime.fromdict(d), save=False)
+                    self.append(WorkedTime.fromdict(d), suppress_signals=True)
         self._sort_by_start_time()  # just to be sure
+        self._refresh_tasks()
+        self._refresh_clients()
+
+        # Only start saving when new items are added after the initial load
+        self.connect("item-added", self.save)
 
     def _sort_by_start_time(self):
         def compare_start_times(a: WorkedTime, b: WorkedTime):
@@ -85,67 +99,102 @@ class WorkedTimeStore(Gio.ListStore):
             clients: Optional[Set[str]] = None,
             start_time: Optional[GLib.DateTime] = None,
             end_time: Optional[GLib.DateTime] = None) -> Gio.ListStore:
+
         list_store = Gio.ListStore(item_type=WorkedTime)
 
-        def populate_list_store():
-            list_store.remove_all()
-            for wt in self:
-                if start_time is not None and wt.start_time.to_unix() < start_time.to_unix():
-                    continue
-                if end_time is not None and wt.start_time.to_unix() > end_time.to_unix():
-                    continue
-                if tasks is not None and wt.task not in tasks:
-                    continue
-                if clients is not None and wt.client not in clients:
-                    continue
+        def is_in_subset(wt: WorkedTime):
+            if start_time is not None and wt.start_time.to_unix() < start_time.to_unix():
+                return False
+            if end_time is not None and wt.start_time.to_unix() > end_time.to_unix():
+                return False
+            if tasks is not None and wt.task not in tasks:
+                return False
+            if clients is not None and wt.client not in clients:
+                return False
+            return True
+
+        for wt in self:
+            if is_in_subset(wt):
                 list_store.append(wt)
 
-        self.connect("items-changed", lambda *_args: populate_list_store())
+        def _on_item_added(added_item):
+            if is_in_subset(added_item):
+                list_store.append(added_item)
 
-        populate_list_store()
+        def _on_item_removed(removed_item):
+            if is_in_subset(removed_item):
+                list_store.remove(list_store.find(removed_item))
+
+        # TODO: if an item in the subset is changed, it should be removed if it no longer matches the subset
+        # TODO: if an item outside the subset is changed, it should be added if it now matches the subset
+
+        self.connect("item-added", _on_item_added)
+        self.connect("item-removed", _on_item_removed)
+
         return list_store
 
-
     def save(self, *_args):
-        print("Saving to", self._filename)
+        logging.info(f"Saving worked time store to {self._filename}")
         with open(self._filename, "w") as f:
             json.dump([wt.asdict() for wt in self], f, indent=2)
 
-    def add_worked_time(self, worked_time: WorkedTime, save: bool = True):
-        worked_time.connect("notify", self.save)
-        self.append(worked_time)
-        if save:
-            self.save()
+    def insert(self, position: int, item: WorkedTime):
+        super().insert(position, item)
+        self._connect_item_to_signals(item)
+        self.emit("item-added", item)
 
-    def all_clients(self) -> Gtk.ListStore:
-        clients = Gtk.ListStore(str)
+    def append(self, item: WorkedTime, suppress_signals: bool = False):
+        super().append(item)
+        self._connect_item_to_signals(item)
+        if not suppress_signals:
+            self.emit("item-added", item)
 
-        def fill_clients(*_args):
-            clients.clear()
-            for client in self._all_clients():
-                clients.append([client])
+    def insert_sorted(self, item: WorkedTime, compare_func: Callable[[WorkedTime, WorkedTime], int], *user_data):
+        raise NotImplementedError("Not implemented yet")
 
-        fill_clients()
-        self.connect("items-changed", fill_clients)
-        return clients
+    def remove_item(self, item: WorkedTime):
+        self.remove(self.find(item))
 
-    def _all_clients(self) -> set:
-        return {wt.client for wt in self}
+    def remove(self, position: int):
+        item = self[position]
+        super().remove(position)
+        self.emit("item-removed", item)
 
-    def all_tasks(self) -> Gtk.ListStore:
-        tasks = Gtk.ListStore(str)
+    def remove_all(self):
+        for i in range(len(self)):
+            self.remove(0)
 
-        def fill_tasks(*_args):
-            tasks.clear()
-            for task in self._all_tasks():
-                tasks.append([task])
+    def _connect_item_to_signals(self, item: WorkedTime):
+        item.connect("notify::client", self._refresh_clients)
+        item.connect("notify::task", self._refresh_tasks)
+        # Save to disk when item was changed
+        item.connect("notify", self.save)
 
-        fill_tasks()
-        self.connect("items-changed", fill_tasks)
-        return tasks
+    def _refresh_clients(self, *_args):
+        new_clients = {wt.client for wt in self}
+        if new_clients != self._clients:
+            added_clients = new_clients - self._clients
+            removed_clients = self._clients - new_clients
+            for client in added_clients:
+                self.clients.append([client])
+            for client in removed_clients:
+                for row in self.clients:
+                    if row[0] == client:
+                        self.clients.remove(row.iter)
 
-    def _all_tasks(self) -> set:
-        return {wt.task for wt in self}
+            self._clients = new_clients
+            self.emit("clients-changed")
+
+    def _refresh_tasks(self, *_args):
+        new_tasks = {wt.task for wt in self}
+        if new_tasks != self._tasks:
+            self.tasks.clear()
+            for task in new_tasks:
+                self.tasks.append([task])
+
+            # TODO: smartly refresh the tasks just like the clients
+            self._tasks = new_tasks
+            self.emit("tasks-changed")
 
     def most_recent_worked_tasks_and_clients(self, n: int) -> Generator[Tuple[str, str], None, None]:
         """
