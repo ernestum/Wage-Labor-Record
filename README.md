@@ -70,6 +70,7 @@ needs `xprintidle` as a dependency
 ## Development Resources
 - [Gtk 3.0 API Documentation](https://lazka.github.io/pgi-docs/Gtk-3.0)
 - [PyGObject tutorial](https://pygobject.readthedocs.io/)
+- [Python GTK+ 3 tutorial](https://python-gtk-3-tutorial.readthedocs.io)
 - [How to install PyGObject](https://pygobject.readthedocs.io/en/latest/getting_started.html#ubuntu-getting-started)
 
 ## Alternatives to this and why they don't work for me
