@@ -19,12 +19,20 @@ class WorkedTimesListView(Gtk.ListBox):
         self._all_items_in_same_year = False
         self._all_items_in_same_month = False
         self._all_items_in_same_day = False
+
+        self._max_task_chars = 0
+        self._max_client_chars = 0
+
         self._worked_time_store = worked_time_store
 
     def set_worked_times_list(self, model: Gio.ListStore):
         self._all_items_in_same_year = len({item.start_time.get_year() for item in model}) == 1
         self._all_items_in_same_month = self._all_items_in_same_year and len({item.start_time.get_month() for item in model}) == 1
         self._all_items_in_same_day = self._all_items_in_same_month and len({item.start_time.get_day_of_month() for item in model}) == 1
+
+        self._max_task_chars = max(len(item.task) for item in model)
+        self._max_client_chars = max(len(item.client) for item in model)
+
         self.bind_model(model, self._create_row)
 
         print(self._all_items_in_same_year, self._all_items_in_same_month, self._all_items_in_same_day)
@@ -93,6 +101,7 @@ class WorkedTimesListView(Gtk.ListBox):
             placeholder_text="Client",
             completion=make_completer(self._worked_time_store.clients),
         )
+        client_entry.set_width_chars(self._max_client_chars)
         client_entry.set_has_frame(False)
 
         def set_client(*args):
@@ -109,6 +118,7 @@ class WorkedTimesListView(Gtk.ListBox):
             placeholder_text="Task",
             completion=make_completer(self._worked_time_store.tasks),
         )
+        task_entry.set_width_chars(self._max_task_chars)
         task_entry.set_has_frame(False)
 
         def set_task(*args):
