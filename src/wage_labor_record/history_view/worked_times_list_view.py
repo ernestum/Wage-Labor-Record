@@ -1,23 +1,25 @@
 import gi
 
 from wage_labor_record.history_view.datetime_picker import DatetimePicker
+from wage_labor_record.utils import make_completer
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import GObject, Gio, Gtk
 
-from wage_labor_record.worked_time_store import WorkedTime
+from wage_labor_record.worked_time_store import WorkedTime, WorkedTimeStore
 
 
 class WorkedTimesListView(Gtk.ListBox):
     """A view to show and edit a set of worked times."""
 
-    def __init__(self):
+    def __init__(self, worked_time_store: WorkedTimeStore):
         super().__init__()
         self.show()
         self._worked_times: Gio.ListStore = None
         self._all_items_in_same_year = False
         self._all_items_in_same_month = False
         self._all_items_in_same_day = False
+        self._worked_time_store = worked_time_store
 
     def set_worked_times_list(self, model: Gio.ListStore):
         self._all_items_in_same_year = len({item.start_time.get_year() for item in model}) == 1
@@ -31,20 +33,35 @@ class WorkedTimesListView(Gtk.ListBox):
         row = Gtk.ListBoxRow()
 
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box.homogenous = False
         box.show()
         row.add(box)
 
-        task_label = Gtk.Entry()
+        task_label = Gtk.Entry(
+            text=item.task,
+            placeholder_text="Task",
+            completion=make_completer(self._worked_time_store.tasks),
+        )
         task_label.set_has_frame(False)
-        item.bind_property("task", task_label, "text", GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
+        def set_task(*args):
+            item.task = task_label.get_text()
+        task_label.connect("activate", set_task)
+        # item.bind_property("task", task_label, "text", GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
         task_label.show()
-        box.add(task_label)
+        box.pack_start(task_label, True, True, 0)
 
-        client_label = Gtk.Entry()
+        client_label = Gtk.Entry(
+            text=item.client,
+            placeholder_text="Client",
+            completion=make_completer(self._worked_time_store.clients),
+        )
         client_label.set_has_frame(False)
-        item.bind_property("client", client_label, "text", GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
+        def set_client(*args):
+            item.client = client_label.get_text()
+        client_label.connect("activate", set_client)
+        # item.bind_property("client", client_label, "text", GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
         client_label.show()
-        box.add(client_label)
+        box.pack_start(client_label, True, True, 0)
 
         start_time_label = Gtk.Button()
         start_time_label.set_relief(Gtk.ReliefStyle.NONE)
@@ -64,8 +81,7 @@ class WorkedTimesListView(Gtk.ListBox):
 
         start_time_label.connect("clicked", on_start_time_clicked)
         start_time_label.show()
-        box.add(start_time_label)
-
+        box.pack_start(start_time_label, True, True, 0)
 
         row.show()
         return row
