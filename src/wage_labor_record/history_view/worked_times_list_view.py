@@ -41,7 +41,7 @@ class WorkedTimesListView(Gtk.ListBox):
         box.pack_start(self._create_client_entry(item), True, True, 0)
         box.pack_start(self._create_start_time_button(item), True, True, 0)
         box.pack_start(self._create_end_time_button(item), True, True, 0)
-        box.pack_start(self._create_delete_button(item), True, True, 0)
+        box.pack_start(self._create_delete_button(item), False, False, 0)  # don't expand the delete button
         row.show()
         return row
 
