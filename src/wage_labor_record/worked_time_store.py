@@ -117,11 +117,11 @@ class WorkedTimeStore(Gio.ListStore):
             if is_in_subset(wt):
                 list_store.append(wt)
 
-        def _on_item_added(added_item):
+        def _on_item_added(_wt_store, added_item):
             if is_in_subset(added_item):
                 list_store.append(added_item)
 
-        def _on_item_removed(removed_item):
+        def _on_item_removed(_wt_store, removed_item):
             if is_in_subset(removed_item):
                 list_store.remove(list_store.find(removed_item))
 
