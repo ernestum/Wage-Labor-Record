@@ -123,7 +123,11 @@ class WorkedTimeStore(Gio.ListStore):
 
         def _on_item_removed(_wt_store, removed_item):
             if is_in_subset(removed_item):
-                list_store.remove(list_store.find(removed_item))
+                found, position = list_store.find(removed_item)
+                if found:
+                    list_store.remove(position)
+                else:
+                    logging.error(f"Could not find item {removed_item} in subset")
 
         # TODO: if an item in the subset is changed, it should be removed if it no longer matches the subset
         # TODO: if an item outside the subset is changed, it should be added if it now matches the subset
@@ -153,7 +157,11 @@ class WorkedTimeStore(Gio.ListStore):
         raise NotImplementedError("Not implemented yet")
 
     def remove_item(self, item: WorkedTime):
-        self.remove(self.find(item))
+        found, position = self.find(item)
+        if found:
+            self.remove(position)
+        else:
+            raise ValueError(f"Item not found: {item}")
 
     def remove(self, position: int):
         item = self[position]
