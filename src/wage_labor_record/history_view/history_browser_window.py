@@ -28,17 +28,20 @@ class HistoryBrowserWindow(Gtk.Window):
         scrolled_window.show()
         box.pack_start(scrolled_window, True, True, 0)  # Expand=True
 
-        self.worked_time_widget = WorkedTimesListView()
+        self.worked_time_widget = WorkedTimesListView(work_time_store)
         self.worked_time_widget.show()
         scrolled_window.add(self.worked_time_widget)
-
 
         self.summary_view = SummaryView()
         box.add(self.summary_view)
 
         def on_selection_changed(selector: SelectorWidget):
-
-            subset = work_time_store.get_subset(tasks=selector.selected_tasks, clients=selector.selected_clients, start_time=selector.selected_start_time, end_time=selector.selected_end_time, )
+            subset = work_time_store.get_subset(
+                tasks=selector.selected_tasks,
+                clients=selector.selected_clients,
+                start_time=selector.selected_start_time,
+                end_time=selector.selected_end_time
+            )
             self.worked_time_widget.set_worked_times_list(subset)
             self.summary_view.set_worked_times_list(subset)
         selector_box.connect("selection-changed", on_selection_changed)

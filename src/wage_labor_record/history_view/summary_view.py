@@ -24,7 +24,7 @@ class SummaryView(Gtk.Box):
         self.durations_by_task.set_size_request(-1, 3 * 24)  # Ensure that the list is at least 3 lines tall
         self.durations_by_task.get_selection().set_mode(Gtk.SelectionMode.NONE)  # Disable selection
         self.durations_by_task.append_column(Gtk.TreeViewColumn("Task", Gtk.CellRendererText(), text=0))
-        self.durations_by_task.append_column(Gtk.TreeViewColumn("Duration", Gtk.CellRendererText(), text=1))
+        self.durations_by_task.append_column(Gtk.TreeViewColumn("Total Duration", Gtk.CellRendererText(), text=1))
 
         self.durations_by_task.show()
         self.add(self.durations_by_task)

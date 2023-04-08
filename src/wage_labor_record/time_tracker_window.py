@@ -16,20 +16,17 @@ class TimeTrackerWindow(Gtk.Dialog):
         # Layout
         box = self.get_content_area()
 
-        task_completer = make_completer(worked_time_store.tasks)
-
         self.task_entry = Gtk.Entry(
             placeholder_text="Task",
-            completion=task_completer,
+            completion=make_completer(worked_time_store.tasks),
         )
         self.task_entry.connect("activate", lambda *_args: self.start_tracking_button.clicked())
         self.task_entry.show()
         box.add(self.task_entry)
 
-        client_completer = make_completer(worked_time_store.clients)
         self.client_entry = Gtk.Entry(
             placeholder_text="Client",
-            completion=client_completer,
+            completion=make_completer(worked_time_store.clients),
         )
         self.client_entry.connect("activate", lambda *_args: self.start_tracking_button.clicked())
         self.client_entry.show()
