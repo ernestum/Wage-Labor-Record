@@ -30,8 +30,8 @@ class WorkedTimesListView(Gtk.ListBox):
         self._all_items_in_same_month = self._all_items_in_same_year and len({item.start_time.get_month() for item in model}) == 1
         self._all_items_in_same_day = self._all_items_in_same_month and len({item.start_time.get_day_of_month() for item in model}) == 1
 
-        self._max_task_chars = max(len(item.task) for item in model)
-        self._max_client_chars = max(len(item.client) for item in model)
+        self._max_task_chars = max(len(item.task) for item in model) if len(model) > 0 else 0
+        self._max_client_chars = max(len(item.client) for item in model) if len(model) > 0 else 0
 
         self.bind_model(model, self._create_row)
 
