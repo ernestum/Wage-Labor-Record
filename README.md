@@ -63,6 +63,18 @@ So this time tracker tries to
 - `xprintidle` as a dependency to detect idle time.
 - GTK 3.0 for the GUI
 
+## Installation
+I recommend installing via pipx:
+```bash
+pipx install wage-labor-record
+```
+
+## Usage
+
+```bash
+wlr
+```
+
 ## Development Resources
 - [Gtk 3.0 API Documentation](https://lazka.github.io/pgi-docs/Gtk-3.0)
 - [PyGObject tutorial](https://pygobject.readthedocs.io/)
