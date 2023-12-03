@@ -39,7 +39,7 @@ class TimerTrackerApplication(Gtk.Application):
 
         self.worked_time_store = worked_time_store = WorkedTimeStore(data_dir / "worked_times.json")
 
-        stop_tracking_action.connect("worked-time", lambda _, worked_time: worked_time_store.add_worked_time(worked_time))
+        stop_tracking_action.connect("worked-time", lambda _, worked_time: worked_time_store.append(worked_time))
         self.tray_icon = TimeTrackerTrayIcon(tracking_state, worked_time_store, self)
 
         def _check_for_idle(*_):
