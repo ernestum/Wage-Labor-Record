@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 
@@ -38,3 +39,8 @@ class TrackingState(GObject.GObject):
 
     def is_client_and_task_set(self) -> bool:
         return self.client != "" and self.task != ""
+
+    def elapsed_time(self) -> datetime.timedelta:
+        if self.start_time is None:
+            return datetime.timedelta()
+        return datetime.timedelta(microseconds=GLib.DateTime.new_now_local().difference(self.start_time))

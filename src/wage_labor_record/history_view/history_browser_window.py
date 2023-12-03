@@ -1,6 +1,7 @@
 import gi
 
 from wage_labor_record.history_view.summary_view import SummaryView
+from wage_labor_record.tracking_state import TrackingState
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
@@ -11,7 +12,7 @@ from wage_labor_record.history_view.worked_times_list_view import WorkedTimesLis
 
 
 class HistoryBrowserWindow(Gtk.Window):
-    def __init__(self, work_time_store: WorkedTimeStore):
+    def __init__(self, tracking_state: TrackingState, work_time_store: WorkedTimeStore):
         super().__init__(title="Worked Time")
         self.set_default_size(200, 100)
 
@@ -32,7 +33,7 @@ class HistoryBrowserWindow(Gtk.Window):
         self.worked_time_widget.show()
         scrolled_window.add(self.worked_time_widget)
 
-        self.summary_view = SummaryView()
+        self.summary_view = SummaryView(tracking_state)
         box.add(self.summary_view)
 
         def on_selection_changed(selector: SelectorWidget):
@@ -43,5 +44,7 @@ class HistoryBrowserWindow(Gtk.Window):
                 end_time=selector.selected_end_time
             )
             self.worked_time_widget.set_worked_times_list(subset)
-            self.summary_view.set_worked_times_list(subset)
+            self.summary_view.set_worked_times_list(
+                subset,
+                include_tracking_state=selector.selected_end_time is None)
         selector_box.connect("selection-changed", on_selection_changed)

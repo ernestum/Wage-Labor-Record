@@ -114,7 +114,7 @@ class TimeTrackerTrayIcon(XApp.StatusIcon):
 
             # HISTORY ----------------------------
             history_item = Gtk.MenuItem(label="History")
-            history_item.connect("activate", lambda _0: HistoryBrowserWindow(worked_time_store).show_all())
+            history_item.connect("activate", lambda _0: HistoryBrowserWindow(tracking_state, worked_time_store).show_all())
             menu.append(history_item)
 
             # SEPARATOR ----------------------------
