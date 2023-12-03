@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,7 +9,7 @@ description = "A tool to track you wage labor."
 readme = "README.md"
 keywords = ["timetracking"]
 requires-python = ">=3.8"
-license = {text = "GNU General Public License v3 (GPLv3)", file = "LICENSE"}
+license = {file = "LICENSE"}
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: X11 Applications :: GTK",
