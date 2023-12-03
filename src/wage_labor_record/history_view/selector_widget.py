@@ -25,6 +25,7 @@ class SelectorWidget(Gtk.Box):
         time_selections_model = Gtk.ListStore(str)
         time_selections_model.append(["Today"])
         time_selections_model.append(["This Week"])
+        time_selections_model.append(["Last Week"])
         time_selections_model.append(["This Month"])
         time_selections_model.append(["Last Month"])
         time_selector = Gtk.TreeView()
@@ -49,6 +50,13 @@ class SelectorWidget(Gtk.Box):
                     start_of_week = GLib.DateTime.new(now.get_timezone(), now.get_year(), now.get_month(), now.get_day_of_month() - (now.get_day_of_week() - 1), 0, 0, 0)
                     self.selected_start_time = start_of_week
                     self.selected_end_time = None
+
+                elif time_selection == "Last Week":
+                    now = GLib.DateTime.new_now_local()
+                    start_of_week = GLib.DateTime.new(now.get_timezone(), now.get_year(), now.get_month(), now.get_day_of_month() - (now.get_day_of_week() - 1), 0, 0, 0)
+                    start_of_prev_week = start_of_week.add_weeks(-1)
+                    self.selected_start_time = start_of_prev_week
+                    self.selected_end_time = start_of_week
 
                 elif time_selection == "This Month":
                     now = GLib.DateTime.new_now_local()
