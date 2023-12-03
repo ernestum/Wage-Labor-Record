@@ -25,6 +25,7 @@ dynamic = ["version"]
 dependencies = [
     "PyGObject",
 ]
+url = "https://github.com/ernestum/Wage-Labor-Record/"
 
 [project.gui-scripts]
 wlr = "wage_labor_record.wlr_app:main"
