@@ -12,9 +12,9 @@ class TrackingState(GObject.GObject):
     task = GObject.Property(type=str, default="")
     client = GObject.Property(type=str, default="")
 
-    def __init__(self, filename: str):
+    def __init__(self, path: str):
         GObject.GObject.__init__(self)
-        self._filename = filename
+        self._filename = path
         self._load()
         self.connect("notify", self._save)
 
