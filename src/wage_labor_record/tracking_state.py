@@ -8,6 +8,12 @@ from gi.repository import GObject, GLib
 
 
 class TrackingState(GObject.GObject):
+    """The state of the time tracking.
+
+    Includes the start time, the task and the client.
+    Whenever the state changes, the state is saved to a json file.
+    When the start time is None, the time is not being tracked.
+    """
     start_time = GObject.Property(type=GLib.DateTime, default=None)
     task = GObject.Property(type=str, default="")
     client = GObject.Property(type=str, default="")
