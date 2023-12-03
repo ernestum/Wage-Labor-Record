@@ -35,8 +35,6 @@ class WorkedTimesListView(Gtk.ListBox):
 
         self.bind_model(model, self._create_row)
 
-        print(self._all_items_in_same_year, self._all_items_in_same_month, self._all_items_in_same_day)
-
     def _create_row(self, item: WorkedTime):
         row = Gtk.ListBoxRow()
 
