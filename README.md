@@ -81,6 +81,14 @@ wlr
 - [Python GTK+ 3 tutorial](https://python-gtk-3-tutorial.readthedocs.io)
 - [How to install PyGObject](https://pygobject.readthedocs.io/en/latest/getting_started.html#ubuntu-getting-started)
 
+### Making a Release
+
+```bash
+python -m build
+twine upload dist/*
+```
+Hint: use __token__ as username and the token from [pypi.org](https://pypi.org/manage/account/token/) as password.
+
 ## Alternatives to this and why they don't work for me
 
 - [jupyter-timetracker](https://pypi.org/project/jupyter-timetracker/) - GUI too complex/too close to DB editing tools. No support for clients
