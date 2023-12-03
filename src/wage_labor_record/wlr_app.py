@@ -56,8 +56,8 @@ class TimerTrackerApplication(Gtk.Application):
                         text="You have been idle for 15 minutes. Do you want to continue tracking?",
                     )
                     dialog.add_button("Continue", Gtk.ResponseType.YES)
-                    dialog.add_button("Continue but discard", Gtk.ResponseType.APPLY)
-                    dialog.add_button("Stop and discard", Gtk.ResponseType.NO)
+                    dialog.add_button("Continue but discard (not implemented)", Gtk.ResponseType.APPLY).set_sensitive(False)
+                    dialog.add_button("Stop and discard (not implemented)", Gtk.ResponseType.NO).set_sensitive(False)
                     dialog.add_button("Stop and save", Gtk.ResponseType.CANCEL).set_action_name("app.abort-tracking")
                     response = dialog.run()
                     # TODO: what do we do if the task has not been set yet? then we could not stop tracking
