@@ -58,6 +58,9 @@ class WorkedTime(GObject.GObject):
     def is_started(self) -> bool:
         return self.start_time is not None
 
+    def __str__(self):
+        return f"WorkedTime({self.task}, {self.client}, {self.start_time}, {self.end_time})"
+
 
 class WorkedTimeStore(Gio.ListStore):
     clients_changed = GObject.Signal("clients-changed")
