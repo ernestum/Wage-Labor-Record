@@ -108,11 +108,7 @@ class WorkedTimesListView(Gtk.ListBox):
         client_entry.set_width_chars(self._max_client_chars)
         client_entry.set_has_frame(False)
 
-        def set_client(*args):
-            item.client = client_entry.get_text()
-
-        client_entry.connect("activate", set_client)
-        # item.bind_property("client", client_label, "text", GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
+        item.bind_property("client", client_entry, "text", GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
         client_entry.show()
         return client_entry
 
@@ -125,11 +121,7 @@ class WorkedTimesListView(Gtk.ListBox):
         task_entry.set_width_chars(self._max_task_chars)
         task_entry.set_has_frame(False)
 
-        def set_task(*args):
-            item.task = task_entry.get_text()
-
-        task_entry.connect("activate", set_task)
-        # item.bind_property("task", task_label, "text", GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
+        item.bind_property("task", task_entry, "text", GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
         task_entry.show()
         return task_entry
 
