@@ -46,7 +46,7 @@ class SelectorWidget(Gtk.Box):
 
                 elif time_selection == "This Week":
                     now = GLib.DateTime.new_now_local()
-                    start_of_week = now.add_days(-now.get_day_of_week() + 1)  # Monday
+                    start_of_week = GLib.DateTime.new(now.get_timezone(), now.get_year(), now.get_month(), now.get_day_of_month() - (now.get_day_of_week() - 1), 0, 0, 0)
                     self.selected_start_time = start_of_week
                     self.selected_end_time = None
 
