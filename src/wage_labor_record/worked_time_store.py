@@ -196,11 +196,15 @@ class WorkedTimeStore(Gio.ListStore):
     def _refresh_tasks(self, *_args):
         new_tasks = {wt.task for wt in self}
         if new_tasks != self._tasks:
-            self.tasks.clear()
-            for task in new_tasks:
+            added_tasks = new_tasks - self._tasks
+            removed_tasks = self._tasks - new_tasks
+            for task in added_tasks:
                 self.tasks.append([task])
+            for task in removed_tasks:
+                for row in self.tasks:
+                    if row[0] == task:
+                        self.tasks.remove(row.iter)
 
-            # TODO: smartly refresh the tasks just like the clients
             self._tasks = new_tasks
             self.emit("tasks-changed")
 
