@@ -27,6 +27,6 @@ dependencies = [
 ]
 
 [project.gui-scripts]
-wlr = "wage_labor_record:run_gui"
+wlr = "wage_labor_record.wlr_app:main"
 
 [tool.setuptools_scm]

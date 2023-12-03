@@ -91,8 +91,7 @@ class TimerTrackerApplication(Gtk.Application):
         self.worked_time_store.save()
         self.quit()
 
-
-if __name__ == "__main__":
+def main():
     app = TimerTrackerApplication()
     try:
         app.run(sys.argv)
